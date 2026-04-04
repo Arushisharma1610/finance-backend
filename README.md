@@ -1,4 +1,4 @@
-# 📊 Finance Data Processing and Access Control Backend
+# 📊 Finance Backend
 
 A RESTful backend API for a finance dashboard with role-based access control, financial record management, and analytics — built with Node.js and PostgreSQL.
 

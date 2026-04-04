@@ -1,3 +1,10 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Dashboard
+ *   description: Financial dashboard endpoints
+ */
+
 const express = require("express");
 const { query: qv } = require("express-validator");
 const { query } = require("../config/database");
@@ -7,8 +14,27 @@ const { handleValidation } = require("../middleware/validate");
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/dashboard/summary
-// Returns total income, total expenses, net balance
+/**
+ * @swagger
+ * /api/dashboard/summary:
+ *   get:
+ *     summary: Get summary of income, expenses, and balance
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Summary of financial data
+ */
 router.get(
   "/summary",
   [
@@ -46,8 +72,32 @@ router.get(
   }
 );
 
-// GET /api/dashboard/by-category
-// Totals per category, optionally filtered by type and date
+/**
+ * @swagger
+ * /api/dashboard/by-category:
+ *   get:
+ *     summary: Get totals per category
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [income, expense]
+ *       - in: query
+ *         name: startDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: endDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *     responses:
+ *       200:
+ *         description: Totals grouped by category
+ */
 router.get(
   "/by-category",
   [
@@ -89,8 +139,22 @@ router.get(
   }
 );
 
-// GET /api/dashboard/monthly?year=2024
-// Monthly income vs expense breakdown — always returns all 12 months
+/**
+ * @swagger
+ * /api/dashboard/monthly:
+ *   get:
+ *     summary: Get monthly income vs expenses
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *           example: 2024
+ *     responses:
+ *       200:
+ *         description: Monthly breakdown of income and expenses
+ */
 router.get(
   "/monthly",
   [qv("year").optional().isInt({ min: 2000, max: 2100 })],
@@ -112,7 +176,6 @@ router.get(
         [year]
       );
 
-      // Fill missing months with zero so frontend always gets 12 data points
       const monthly = fillMissingMonths(year, result.rows);
 
       res.json({ year, monthly });
@@ -123,8 +186,22 @@ router.get(
   }
 );
 
-// GET /api/dashboard/recent?limit=10
-// Last N transactions across all categories
+/**
+ * @swagger
+ * /api/dashboard/recent:
+ *   get:
+ *     summary: Get recent transactions
+ *     tags: [Dashboard]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           example: 10
+ *     responses:
+ *       200:
+ *         description: List of recent transactions
+ */
 router.get("/recent", async (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit || 10), 50);
@@ -148,7 +225,6 @@ router.get("/recent", async (req, res) => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-// Builds the date part of a WHERE clause starting at param index $startIdx
 function dateFilter(startDate, endDate, startIdx) {
   let clause = "";
   const params = [];
@@ -160,7 +236,6 @@ function dateFilter(startDate, endDate, startIdx) {
   return { clause, params };
 }
 
-// Ensures all 12 months appear in the response even if there's no data
 function fillMissingMonths(year, dbRows) {
   const map = {};
   for (const row of dbRows) map[row.month] = row;

@@ -1,3 +1,10 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication endpoints
+ */
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -7,7 +14,38 @@ const { handleValidation } = require("../middleware/validate");
 
 const router = express.Router();
 
-// POST /api/auth/register
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 example: john@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *               role:
+ *                 type: string
+ *                 enum: [viewer, analyst, admin]
+ *                 example: analyst
+ *     responses:
+ *       201:
+ *         description: Account created successfully
+ *       409:
+ *         description: Email already exists
+ */
 router.post(
   "/register",
   [
@@ -24,7 +62,6 @@ router.post(
     try {
       const { name, email, password, role = "viewer" } = req.body;
 
-      // Check if email already taken
       const existing = await query("SELECT id FROM users WHERE email = $1", [email]);
       if (existing.rows.length > 0) {
         return res.status(409).json({ error: "An account with this email already exists" });
@@ -52,7 +89,33 @@ router.post(
   }
 );
 
-// POST /api/auth/login
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: john@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       401:
+ *         description: Invalid email or password
+ *       403:
+ *         description: Account deactivated
+ */
 router.post(
   "/login",
   [

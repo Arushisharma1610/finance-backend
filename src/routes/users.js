@@ -1,3 +1,10 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: User management endpoints
+ */
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const { body, param } = require("express-validator");
@@ -9,7 +16,18 @@ const { handleValidation } = require("../middleware/validate");
 const router = express.Router();
 router.use(authenticate);
 
-// GET /api/users — admin only
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Get all users (admin only)
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: List of users
+ *       403:
+ *         description: Forbidden
+ */
 router.get("/", requireRole("admin"), async (req, res) => {
   try {
     const result = await query(
@@ -22,12 +40,52 @@ router.get("/", requireRole("admin"), async (req, res) => {
   }
 });
 
-// GET /api/users/me — own profile
+/**
+ * @swagger
+ * /api/users/me:
+ *   get:
+ *     summary: Get own profile
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: Current user profile
+ */
 router.get("/me", (req, res) => {
   res.json({ user: req.user });
 });
 
-// POST /api/users — admin creates a user
+/**
+ * @swagger
+ * /api/users:
+ *   post:
+ *     summary: Create a new user (admin only)
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Jane Doe
+ *               email:
+ *                 type: string
+ *                 example: jane@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *               role:
+ *                 type: string
+ *                 enum: [viewer, analyst, admin]
+ *                 example: analyst
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *       409:
+ *         description: Email already in use
+ */
 router.post(
   "/",
   requireRole("admin"),
@@ -64,7 +122,41 @@ router.post(
   }
 );
 
-// PATCH /api/users/:id — admin updates role or status
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   patch:
+ *     summary: Update user role or status (admin only)
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [viewer, analyst, admin]
+ *                 example: analyst
+ *               status:
+ *                 type: string
+ *                 enum: [active, inactive]
+ *                 example: inactive
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       400:
+ *         description: Invalid input or self-deactivation attempt
+ *       404:
+ *         description: User not found
+ */
 router.patch(
   "/:id",
   requireRole("admin"),

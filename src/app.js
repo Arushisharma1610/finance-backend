@@ -1,18 +1,30 @@
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");  
 const { connectDB } = require("./config/database");
 const { runSchema } = require("./config/schema");
+
+// -------Swagger setup-------
+const swaggerSpec = require("./config/swagger");
+const swaggerUi = require("swagger-ui-express");
 
 const app = express();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
+// const cors = require("cors");
+app.use(cors());
 app.use(express.json());
 
 app.use((req, _res, next) => {
   console.log(`${new Date().toISOString()}  ${req.method}  ${req.path}`);
   next();
 });
+
+// Swagger docs route
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: "Finance API Docs",
+}));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api/auth",         require("./routes/auth"));
@@ -35,8 +47,8 @@ app.use((err, _req, res, _next) => {
 
 // ── Startup ───────────────────────────────────────────────────────────────────
 async function start() {
-  await connectDB();   // verify PostgreSQL is reachable
-  await runSchema();   // create tables if they don't exist
+  await connectDB();
+  await runSchema();
 
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, () => {

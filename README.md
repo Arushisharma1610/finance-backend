@@ -247,3 +247,75 @@ Validation errors return HTTP 422:
 - Refresh tokens
 - CSV export
 - Full-text search on notes
+
+
+API Documentation
+Swagger UI
+Interactive API docs are available at:
+
+Local: http://localhost:3000/api/docs
+
+Live: https://your-render-url.onrender.com/api/docs (your-render-url.onrender.com in Bing)
+
+Use the Authorize button to paste your JWT token once logged in.
+
+Quick Testing Guide
+Preloaded Accounts
+Admin → admin@example.com / AdminPass123
+
+Analyst → analyst@example.com / AnalystPass123
+
+Example Requests (curl)
+Login (Admin):
+
+bash
+curl -X POST https://your-render-url.onrender.com/api/auth/login \
+-H "Content-Type: application/json" \
+-d '{"email":"admin@example.com","password":"AdminPass123"}'
+Get Transactions:
+
+bash
+curl -X GET https://your-render-url.onrender.com/api/transactions \
+-H "Authorization: Bearer <token>"
+Get Dashboard Summary:
+
+bash
+curl -X GET https://your-render-url.onrender.com/api/dashboard/summary \
+-H "Authorization: Bearer <token>"
+Create Transaction (Analyst/Admin):
+
+bash
+curl -X POST https://your-render-url.onrender.com/api/transactions \
+-H "Authorization: Bearer <token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "amount": 5000,
+  "type": "income",
+  "category": "Freelance",
+  "date": "2026-04-04",
+  "notes": "Project payment"
+}'
+Error Format
+json
+{ "error": "Human-readable message" }
+Validation errors:
+
+json
+{
+  "error": "Validation failed",
+  "details": [
+    { "field": "amount", "message": "Amount must be a positive number" }
+  ]
+}
+Design Decisions
+No ORM — Raw SQL with parameterized queries ($1, $2) for clarity and control.
+
+Role hierarchy — Roles mapped to numeric levels (viewer=1, analyst=2, admin=3).
+
+Soft delete — Transactions set a deleted_at timestamp instead of being removed.
+
+Auto schema — Tables created on first run via schema.js.
+
+Connection pool — pg.Pool manages multiple DB connections efficiently.
+
+Monthly trends always return 12 months — Months with no data filled with zeros.
